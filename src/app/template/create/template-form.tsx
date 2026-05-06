@@ -37,9 +37,13 @@ import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { getQueryClient } from "@/providers/get-react-cilents";
 import {
+  DEFAULT_SCRIPT_ID,
+  SCRIPT_URL,
   Turnstile,
   TurnstileServerValidationErrorCode,
+  TurnstileServerValidationResponse,
 } from "@marsidev/react-turnstile";
+import Script from "next/script";
 export const CommuneLabels: Record<string, string> = {
   sangkat_tuek_lak_1: "សង្កាត់ទឹកល្អក់ទី១",
   sangkat_tuek_lak_2: "សង្កាត់ទឹកល្អក់ទី២",
@@ -52,30 +56,10 @@ export const CommuneLabels: Record<string, string> = {
   sangkat_olympic: "សង្កាត់អូឡាំពិក",
   sangkat_phsar_thmei_1: "សង្កាត់ផ្សារថ្មីទី១",
 };
-interface TurnstileServerValidationResponse {
-  /** Indicate if the token validation was successful or not. */
-  success: boolean;
-  /** A list of errors that occurred. */
-  "error-codes": TurnstileServerValidationErrorCode[];
-  /** The ISO timestamp for the time the challenge was solved. */
-  challenge_ts?: string;
-  /** The hostname for which the challenge was served. */
-  hostname?: string;
-  /** The customer widget identifier passed to the widget on the client side. This is used to differentiate widgets using the same sitekey in analytics. Its integrity is protected by modifications from an attacker. It is recommended to validate that the action matches an expected value. */
-  action?: string;
-  /** The customer data passed to the widget on the client side. This can be used by the customer to convey state. It is integrity protected by modifications from an attacker. */
-  cdata?: string;
-  /** Whether or not an interactive challenge was issued by Cloudflare */
-  metadata?: {
-    interactive: boolean;
-  };
-  /** Error messages returned */
-  messages?: string[];
-}
+
 export default function CreateTemplate() {
   const navigate = useRouter();
   const queryClient = getQueryClient();
-  const [turnstileKey, setTurnstileKey] = useState(0);
 
   const createTemplate = async (values: NewTemplate) => {
     const response = await apiFetch<ApiResponse<Template>>("/api/template", {
@@ -152,7 +136,6 @@ export default function CreateTemplate() {
 
       if (verifyRes.error) {
         toast.error("Captcha verification failed. Please try again.");
-        setTurnstileKey((k) => k + 1);
         return;
       }
 
@@ -268,7 +251,10 @@ export default function CreateTemplate() {
                 </FormItem>
               )}
             />
-            <Turnstile key={turnstileKey} siteKey="0x4AAAAAADKBBRyxwepo61CM" />
+            <Turnstile
+              injectScript={false}
+              siteKey="0x4AAAAAADKBBRyxwepo61CM"
+            />
 
             <Button
               type="submit"
@@ -287,6 +273,11 @@ export default function CreateTemplate() {
           </FieldGroup>
         </form>
       </Form>
+      <Script
+        id={DEFAULT_SCRIPT_ID}
+        src={SCRIPT_URL}
+        strategy="beforeInteractive"
+      />
     </div>
   );
 }
