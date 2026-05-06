@@ -46,7 +46,10 @@ export async function POST(req: Request) {
 
     if (isHttpException(error)) {
       return Response.json(
-        { message: error.message, status: false, data: null },
+        {
+          success: false,
+          error: { code: String(error.statusCode), message: error.message },
+        },
         { status: error.statusCode },
       );
     }
@@ -57,7 +60,10 @@ export async function POST(req: Request) {
     });
 
     return Response.json(
-      { message: serverError.message, status: false },
+      {
+        success: false,
+        error: { code: "INTERNAL_SERVER_ERROR", message: serverError.message },
+      },
       { status: serverError.statusCode },
     );
   }
@@ -70,7 +76,10 @@ export async function GET() {
   } catch (error) {
     if (isHttpException(error)) {
       return Response.json(
-        { message: error.message, status: false, data: null },
+        {
+          success: false,
+          error: { code: String(error.statusCode), message: error.message },
+        },
         { status: error.statusCode },
       );
     }
@@ -81,7 +90,10 @@ export async function GET() {
     });
 
     return Response.json(
-      { message: serverError.message, status: false },
+      {
+        success: false,
+        error: { code: "INTERNAL_SERVER_ERROR", message: serverError.message },
+      },
       { status: serverError.statusCode },
     );
   }

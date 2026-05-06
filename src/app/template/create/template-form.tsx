@@ -64,8 +64,9 @@ export default function CreateTemplate() {
     });
 
     if (response.error || !response.value) {
-      toast.error(response.error.message || "submit data failed ");
-      throw new Error(response.error.message);
+      const Message = response.error?.message ?? "submit data failed";
+      toast.error(Message);
+      throw new Error(Message);
     }
 
     return response.value;
