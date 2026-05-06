@@ -1,0 +1,1 @@
+ALTER TABLE "templates" ADD COLUMN "birth" timestamp with time zone;
