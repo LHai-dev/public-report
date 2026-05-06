@@ -1,4 +1,9 @@
-import { Geist, Geist_Mono, Inter } from "next/font/google";
+import {
+  Geist,
+  Geist_Mono,
+  Inter,
+  Konkhmer_Sleokchher,
+} from "next/font/google";
 import "./globals.css";
 
 import { cn } from "@/lib/utils";
@@ -12,9 +17,10 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const geistMono = Konkhmer_Sleokchher({
+  weight: "400",
+  variable: "--font-konkhmer-sleokchher",
+  subsets: ["khmer"],
 });
 
 export default function RootLayout({
