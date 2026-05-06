@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { FieldGroup } from "@/components/ui/field";
 import {
   Select,
@@ -36,7 +36,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { getQueryClient } from "@/providers/get-react-cilents";
-
+import { Turnstile } from "@marsidev/react-turnstile";
+import type { TurnstileInstance } from "@marsidev/react-turnstile";
 export const CommuneLabels: Record<string, string> = {
   sangkat_tuek_lak_1: "សង្កាត់ទឹកល្អក់ទី១",
   sangkat_tuek_lak_2: "សង្កាត់ទឹកល្អក់ទី២",
@@ -53,6 +54,7 @@ export const CommuneLabels: Record<string, string> = {
 export default function CreateTemplate() {
   const navigate = useRouter();
   const queryClient = getQueryClient();
+  const turnstileRef = useRef<TurnstileInstance | null>(null);
 
   const createTemplate = async (values: NewTemplate) => {
     const response = await apiFetch<ApiResponse<Template>>("/api/template", {
@@ -223,6 +225,8 @@ export default function CreateTemplate() {
                 </FormItem>
               )}
             />
+
+            <Turnstile ref={turnstileRef} siteKey="0x4AAAAAADKBBRyxwepo61CM" />
             <Button
               type="submit"
               size="lg"

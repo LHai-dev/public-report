@@ -3,11 +3,15 @@ import { templateService } from "@/server/template";
 import {
   HttpBadRequest,
   HttpInternalServerError,
+  HttpTooManyRequests,
   isHttpException,
 } from "@httpx/exception";
 import { err, ok } from "@justmiracle/result";
 import z from "zod/v4";
 import { Result } from "better-result";
+import { headers } from "next/headers";
+import { rateLimit } from "@/lib/rate-limiting";
+import { getClientIp } from "get-client-ip";
 
 export async function POST(req: Request) {
   try {
@@ -16,6 +20,17 @@ export async function POST(req: Request) {
     // if (body.error) {
     //   throw new HttpBadRequest(body.error);
     // }
+
+    const headersList = await headers();
+    const getIp =
+      headersList.get("cf-connecting-ip") ||
+      headersList.get("x-forwarded-for")?.split(",")[0];
+
+    const rl = rateLimit(getIp!);
+
+    if (!rl) {
+      throw new HttpTooManyRequests();
+    }
 
     const parsed = await Result.tryPromise(() => req.json());
 
@@ -71,6 +86,19 @@ export async function POST(req: Request) {
 
 export async function GET() {
   try {
+    const headersList = await headers();
+    const getIp =
+      headersList.get("cf-connecting-ip") ||
+      headersList.get("x-forwarded-for")?.split(",")[0];
+
+    const rl = rateLimit(getIp!);
+
+    console.log("rl", rl);
+
+    if (!rl) {
+      throw new HttpTooManyRequests();
+    }
+
     const result = await templateService.getAll();
     return Response.json({ success: true, message: "", data: result });
   } catch (error) {
