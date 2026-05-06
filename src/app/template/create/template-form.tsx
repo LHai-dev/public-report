@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { useCallback, useRef } from "react";
+import { useCallback, useState } from "react";
 import { FieldGroup } from "@/components/ui/field";
 import {
   Select,
@@ -37,7 +37,6 @@ import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { getQueryClient } from "@/providers/get-react-cilents";
 import { Turnstile } from "@marsidev/react-turnstile";
-import type { TurnstileInstance } from "@marsidev/react-turnstile";
 export const CommuneLabels: Record<string, string> = {
   sangkat_tuek_lak_1: "សង្កាត់ទឹកល្អក់ទី១",
   sangkat_tuek_lak_2: "សង្កាត់ទឹកល្អក់ទី២",
@@ -54,7 +53,8 @@ export const CommuneLabels: Record<string, string> = {
 export default function CreateTemplate() {
   const navigate = useRouter();
   const queryClient = getQueryClient();
-  const turnstileRef = useRef<TurnstileInstance | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string>("");
+  const [turnstileKey, setTurnstileKey] = useState(0);
 
   const createTemplate = async (values: NewTemplate) => {
     const response = await apiFetch<ApiResponse<Template>>("/api/template", {
@@ -110,10 +110,28 @@ export default function CreateTemplate() {
   const { mutate } = createTemplateMutate;
 
   const onsubmit = useCallback(
-    (values: NewTemplate) => {
+    async (values: NewTemplate) => {
+      if (!turnstileToken) {
+        toast.error("Please complete the captcha");
+        return;
+      }
+
+      const verifyRes = await fetch("/api/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: turnstileToken }),
+      });
+
+      if (!verifyRes.ok) {
+        toast.error("Captcha verification failed. Please try again.");
+        setTurnstileToken("");
+        setTurnstileKey((k) => k + 1);
+        return;
+      }
+
       mutate(values);
     },
-    [mutate],
+    [mutate, turnstileToken],
   );
 
   return (
@@ -141,7 +159,6 @@ export default function CreateTemplate() {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="commune"
@@ -169,7 +186,6 @@ export default function CreateTemplate() {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="name"
@@ -225,8 +241,12 @@ export default function CreateTemplate() {
                 </FormItem>
               )}
             />
+            <Turnstile
+              key={turnstileKey}
+              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+              onSuccess={(token: string) => setTurnstileToken(token)}
+            />
 
-            <Turnstile ref={turnstileRef} siteKey="0x4AAAAAADKBBRyxwepo61CM" />
             <Button
               type="submit"
               size="lg"

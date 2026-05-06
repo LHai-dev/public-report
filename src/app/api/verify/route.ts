@@ -1,4 +1,8 @@
-import { HttpBadRequest } from "@httpx/exception";
+import {
+  HttpBadRequest,
+  HttpInternalServerError,
+  isHttpException,
+} from "@httpx/exception";
 import type { TurnstileServerValidationResponse } from "@marsidev/react-turnstile";
 import { Result } from "better-result";
 import { z } from "zod/v4";
@@ -12,41 +16,65 @@ const responseHeaders = {
 
 export const TurnstileSchema = z.object({
   token: z.string(),
-  secret: z.string(),
 });
 
 export async function POST(request: Request) {
-  const parsed = await Result.tryPromise(() => request.json());
+  try {
+    const parsed = await Result.tryPromise(() => request.json());
 
-  if (parsed.isErr()) {
-    throw new HttpBadRequest(parsed.error.message);
-  }
+    if (parsed.isErr()) {
+      throw new HttpBadRequest(parsed.error.message);
+    }
 
-  const validatedInput = TurnstileSchema.safeParse(parsed.value);
+    const validatedInput = TurnstileSchema.safeParse(parsed.value);
 
-  if (!validatedInput.success) {
-    throw new HttpBadRequest(z.prettifyError(validatedInput.error));
-  }
+    if (!validatedInput.success) {
+      throw new HttpBadRequest(z.prettifyError(validatedInput.error));
+    }
 
-  const { secret, token } = validatedInput.data;
+    const { token } = validatedInput.data;
 
-  const data = (await fetch(verifyEndpoint, {
-    method: "POST",
-    body: `secret=${encodeURIComponent(secret)}&response=${encodeURIComponent(token)}`,
-    headers: {
-      "content-type": "application/x-www-form-urlencoded",
-    },
-  }).then((res) => res.json())) as TurnstileServerValidationResponse;
+    const secret = process.env.TURNSTILE_SECRET_KEY;
 
-  if (!data.success) {
+    if (!secret) {
+      throw new HttpBadRequest("invalid secret");
+    }
+
+    const data = (await fetch(verifyEndpoint, {
+      method: "POST",
+      body: `secret=${encodeURIComponent(secret)}&response=${encodeURIComponent(token)}`,
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+      },
+    }).then((res) => res.json())) as TurnstileServerValidationResponse;
+
+    if (!data.success) {
+      return new Response(JSON.stringify(data), {
+        status: 400,
+        headers: responseHeaders,
+      });
+    }
+
     return new Response(JSON.stringify(data), {
-      status: 400,
+      status: 200,
       headers: responseHeaders,
     });
-  }
+  } catch (error) {
+    if (isHttpException(error)) {
+      return Response.json(
+        { message: error.message, status: false, data: null },
+        { status: error.statusCode },
+      );
+    }
 
-  return new Response(JSON.stringify(data), {
-    status: 200,
-    headers: responseHeaders,
-  });
+    const serverError = new HttpInternalServerError({
+      message: "An unexpected error occurred",
+      cause: error instanceof Error ? error : undefined,
+    });
+
+    return Response.json(
+      { message: serverError.message, status: false },
+      { status: serverError.statusCode },
+    );
+  }
 }

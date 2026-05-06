@@ -11,7 +11,6 @@ import z from "zod/v4";
 import { Result } from "better-result";
 import { headers } from "next/headers";
 import { rateLimit } from "@/lib/rate-limiting";
-import { getClientIp } from "get-client-ip";
 
 export async function POST(req: Request) {
   try {
