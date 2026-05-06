@@ -6,7 +6,7 @@ export default defineConfig({
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: {
-    url: `postgres://postgres:dbc625c9fc3e91cf@217.216.32.43:2222/form-db`,
+    url: process.env.DB_URL!,
   },
   migrations: {
     prefix: "index",
