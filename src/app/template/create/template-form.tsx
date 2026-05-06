@@ -53,7 +53,6 @@ export const CommuneLabels: Record<string, string> = {
 export default function CreateTemplate() {
   const navigate = useRouter();
   const queryClient = getQueryClient();
-  const [turnstileToken, setTurnstileToken] = useState<string>("");
   const [turnstileKey, setTurnstileKey] = useState(0);
 
   const createTemplate = async (values: NewTemplate) => {
@@ -110,28 +109,32 @@ export default function CreateTemplate() {
   const { mutate } = createTemplateMutate;
 
   const onsubmit = useCallback(
-    async (values: NewTemplate) => {
-      if (!turnstileToken) {
+    async (values: NewTemplate, event?: React.BaseSyntheticEvent) => {
+      const formData = new FormData(event?.target as HTMLFormElement);
+      const token = formData.get("cf-turnstile-response");
+
+      if (!token) {
         toast.error("Please complete the captcha");
         return;
       }
 
-      const verifyRes = await fetch("/api/verify", {
+      const verifyRes = await apiFetch<ApiResponse<Template>>("/api/verify", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: turnstileToken }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
       });
 
-      if (!verifyRes.ok) {
+      if (verifyRes.error) {
         toast.error("Captcha verification failed. Please try again.");
-        setTurnstileToken("");
         setTurnstileKey((k) => k + 1);
         return;
       }
 
       mutate(values);
     },
-    [mutate, turnstileToken],
+    [mutate],
   );
 
   return (
@@ -241,11 +244,7 @@ export default function CreateTemplate() {
                 </FormItem>
               )}
             />
-            <Turnstile
-              key={turnstileKey}
-              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
-              onSuccess={(token: string) => setTurnstileToken(token)}
-            />
+            <Turnstile key={turnstileKey} siteKey="0x4AAAAAADKBBRyxwepo61CM" />
 
             <Button
               type="submit"

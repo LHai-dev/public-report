@@ -55,10 +55,13 @@ export async function POST(request: Request) {
       });
     }
 
-    return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: responseHeaders,
-    });
+    return Response.json(
+      { success: true, message: "", data: data },
+      {
+        status: 200,
+        headers: responseHeaders,
+      },
+    );
   } catch (error) {
     if (isHttpException(error)) {
       return Response.json(

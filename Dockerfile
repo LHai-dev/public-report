@@ -9,12 +9,9 @@ RUN npm install
 # Copying source files
 COPY . .
 
-
-ARG DATABASE_URL
 ARG SKIP_ENV_VALIDATION=true
 
 ENV SKIP_ENV_VALIDATION=${SKIP_ENV_VALIDATION}
-ENV DATABASE_URL=${DATABASE_URL}
 
 # Building app
 RUN npm run build
