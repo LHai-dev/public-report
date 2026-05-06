@@ -100,8 +100,8 @@ export default function CreateTemplate() {
       console.error("An error occurred during create", error);
       const errorMessage =
         error instanceof ApiFetchError
-          ? "Teacher data not found"
-          : "failed_to_export_report";
+          ? "Template data not found"
+          : "failed to submit template";
       toast.error(errorMessage);
     },
   });
@@ -123,7 +123,7 @@ export default function CreateTemplate() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify({ token }),
       });
 
       if (verifyRes.error) {
