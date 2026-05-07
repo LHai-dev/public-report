@@ -1,12 +1,12 @@
 "use client";
 import { NewTemplate, Template, TemplateInsertSchema } from "@/db/schema";
-import { apiFetch, ApiFetchError } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 import { ApiResponse } from "@/types/api-response.type";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { FieldGroup } from "@/components/ui/field";
 import {
   Select,
@@ -102,32 +102,25 @@ export default function CreateTemplate() {
       }
     },
     onError: (error) => {
-      console.error("An error occurred during create", error);
-      const errorMessage =
-        error instanceof ApiFetchError
-          ? "Template data not found"
-          : "failed to submit template";
-      toast.error(errorMessage);
+      console.error(error);
+      toast.error("Failed to create Template");
     },
   });
 
   const { mutate } = createTemplateMutate;
 
-  const onsubmit = useCallback(
-    (values: NewTemplate) => {
-      if (!turnstileToken) {
-        toast.error("Please complete the captcha");
-        return;
-      }
-      mutate(values);
-    },
-    [mutate, turnstileToken],
-  );
+  const onSubmit = (values: NewTemplate) => {
+    if (!turnstileToken) {
+      toast.error("Please complete the captcha");
+      return;
+    }
+    mutate(values);
+  };
 
   return (
     <div className="mx-auto w-full max-w-xs p-6">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onsubmit)}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
             <FormField
               control={form.control}

@@ -12,6 +12,10 @@ import { headers } from "next/headers";
 import { rateLimit } from "@/lib/rate-limiting";
 import { validateTurnstile } from "@/lib/validate-turnstile";
 
+export const TemplateWithTurnstileSchema = TemplateInsertSchema.extend({
+  token: z.string(),
+});
+
 export async function POST(req: Request) {
   try {
     const headersList = await headers();
@@ -32,22 +36,20 @@ export async function POST(req: Request) {
       throw new HttpBadRequest(parsed.error.message);
     }
 
-    const validatedInput = TemplateInsertSchema.safeParse(parsed.value);
+    const validatedInput = TemplateWithTurnstileSchema.safeParse(parsed.value);
 
     if (!validatedInput.success) {
       throw new HttpBadRequest(z.prettifyError(validatedInput.error));
     }
 
-    const { commune, name, birth, percentage, phoneNumber } =
+    const { commune, name, birth, percentage, phoneNumber, token } =
       validatedInput.data;
 
-    const turnstileToken = parsed.value?.turnstileToken as string;
-
-    if (!turnstileToken) {
+    if (!token) {
       throw new HttpBadRequest("Missing captcha token");
     }
 
-    await validateTurnstile(turnstileToken, getIp);
+    await validateTurnstile(token, getIp);
 
     const result = await templateService.create({
       commune,
