@@ -13,7 +13,7 @@ import { rateLimit } from "@/lib/rate-limiting";
 import { validateTurnstile } from "@/lib/validate-turnstile";
 
 export const TemplateWithTurnstileSchema = TemplateInsertSchema.extend({
-  token: z.string(),
+  turnstileToken: z.string(),
 });
 
 export async function POST(req: Request) {
@@ -42,14 +42,14 @@ export async function POST(req: Request) {
       throw new HttpBadRequest(z.prettifyError(validatedInput.error));
     }
 
-    const { commune, name, birth, percentage, phoneNumber, token } =
+    const { commune, name, birth, percentage, phoneNumber, turnstileToken } =
       validatedInput.data;
 
-    if (!token) {
+    if (!turnstileToken) {
       throw new HttpBadRequest("Missing captcha token");
     }
 
-    await validateTurnstile(token, getIp);
+    const turnstileResponse = await validateTurnstile(turnstileToken, getIp);
 
     const result = await templateService.create({
       commune,
@@ -59,7 +59,14 @@ export async function POST(req: Request) {
       phoneNumber,
     });
 
-    return Response.json({ success: true, message: "", data: result });
+    return Response.json({
+      success: true,
+      message: "submitted",
+      data: {
+        result,
+        turnstileResponse,
+      },
+    });
   } catch (error) {
     console.log("error", error);
 
