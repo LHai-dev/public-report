@@ -68,7 +68,7 @@ export default function CreateTemplate() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ values }),
+      body: JSON.stringify(values),
     });
 
     if (response.error || !response.value) {
@@ -87,6 +87,7 @@ export default function CreateTemplate() {
       name: "",
       percentage: 0,
       phoneNumber: "",
+      turnstileToken: "",
     },
   });
 
