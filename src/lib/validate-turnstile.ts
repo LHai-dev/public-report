@@ -45,8 +45,10 @@ export async function validateTurnstile(
   }
 
   if (validation.challenge_ts) {
+    console.log("TimeStamps", new Date(validation.challenge_ts));
     const ageMinutes =
       (Date.now() - new Date(validation.challenge_ts).getTime()) / (1000 * 60);
+    console.log("Age Minutes", ageMinutes);
     if (ageMinutes > 4) {
       console.warn(`Turnstile token is ${ageMinutes.toFixed(1)} minutes old`);
     }

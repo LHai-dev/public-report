@@ -41,10 +41,6 @@ export async function POST(req: Request) {
     const { commune, name, birth, percentage, phoneNumber, turnstileToken } =
       validatedInput.data;
 
-    if (!turnstileToken) {
-      throw new HttpBadRequest("Missing captcha token");
-    }
-
     const turnstileResponse = await validateTurnstile(turnstileToken, getIp);
 
     const result = await templateService.create({
