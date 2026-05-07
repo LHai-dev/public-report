@@ -1,12 +1,15 @@
 "use client";
-import { NewTemplate, Template, TemplateInsertSchema } from "@/db/schema";
+import {
+  NewTemplateWithTurnstile,
+  Template,
+  TemplateWithTurnstileSchema,
+} from "@/db/schema";
 import { apiFetch } from "@/lib/api";
 import { ApiResponse } from "@/types/api-response.type";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
 import { FieldGroup } from "@/components/ui/field";
 import {
   Select,
@@ -58,15 +61,14 @@ export const CommuneLabels: Record<string, string> = {
 export default function CreateTemplate() {
   const navigate = useRouter();
   const queryClient = getQueryClient();
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
-  const createTemplate = async (values: NewTemplate) => {
+  const createTemplate = async (values: NewTemplateWithTurnstile) => {
     const response = await apiFetch<ApiResponse<Template>>("/api/template", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ ...values, turnstileToken }),
+      body: JSON.stringify({ values }),
     });
 
     if (response.error || !response.value) {
@@ -79,7 +81,7 @@ export default function CreateTemplate() {
   };
 
   const form = useForm({
-    resolver: zodResolver(TemplateInsertSchema),
+    resolver: zodResolver(TemplateWithTurnstileSchema),
     defaultValues: {
       commune: "សង្កាត់ទឹកល្អក់ទី១",
       name: "",
@@ -89,7 +91,7 @@ export default function CreateTemplate() {
   });
 
   const createTemplateMutate = useMutation({
-    mutationFn: (values: NewTemplate) => createTemplate(values),
+    mutationFn: (values: NewTemplateWithTurnstile) => createTemplate(values),
     onSuccess: (result) => {
       if (result.success) {
         form.reset();
@@ -109,8 +111,8 @@ export default function CreateTemplate() {
 
   const { mutate } = createTemplateMutate;
 
-  const onSubmit = (values: NewTemplate) => {
-    if (!turnstileToken) {
+  const onSubmit = (values: NewTemplateWithTurnstile) => {
+    if (!values.turnstileToken) {
       toast.error("Please complete the captcha");
       return;
     }
@@ -224,12 +226,22 @@ export default function CreateTemplate() {
                 </FormItem>
               )}
             />
-            <Turnstile
-              injectScript={false}
-              siteKey="0x4AAAAAADKBBRyxwepo61CM"
-              onSuccess={setTurnstileToken}
+            <FormField
+              control={form.control}
+              name="turnstileToken"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>ផ្ទៀងផ្ទាត់ថាអ្នកមិនមែនជាមនុស្សយន្តទេ</FormLabel>
+                  <FormControl>
+                    <Turnstile
+                      siteKey="0x4AAAAAADKBBRyxwepo61CM"
+                      onSuccess={() => field.value}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-
             <Button
               type="submit"
               size="lg"

@@ -1,4 +1,3 @@
-import { TemplateInsertSchema } from "@/db/schema";
 import { templateService } from "@/server/template";
 import {
   HttpBadRequest,
@@ -11,10 +10,7 @@ import { Result } from "better-result";
 import { headers } from "next/headers";
 import { rateLimit } from "@/lib/rate-limiting";
 import { validateTurnstile } from "@/lib/validate-turnstile";
-
-export const TemplateWithTurnstileSchema = TemplateInsertSchema.extend({
-  turnstileToken: z.string(),
-});
+import { TemplateWithTurnstileSchema } from "@/db/schema";
 
 export async function POST(req: Request) {
   try {

@@ -37,3 +37,11 @@ export const TemplateUpdateSchema = createUpdateSchema(templateTable).omit({
 export type Template = typeof templateTable.$inferSelect;
 export type NewTemplate = z.infer<typeof TemplateInsertSchema>;
 export type UpdateTemplate = z.infer<typeof TemplateUpdateSchema>;
+
+export const TemplateWithTurnstileSchema = TemplateInsertSchema.extend({
+  turnstileToken: z.string({ error: "Missing captcha token" }),
+});
+
+export type NewTemplateWithTurnstile = z.infer<
+  typeof TemplateWithTurnstileSchema
+>;
