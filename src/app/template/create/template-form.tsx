@@ -235,7 +235,7 @@ export default function CreateTemplate() {
                   <FormControl>
                     <Turnstile
                       siteKey="0x4AAAAAADKBBRyxwepo61CM"
-                      onSuccess={() => field.value}
+                      onSuccess={(token) => field.onChange(token)}
                     />
                   </FormControl>
                   <FormMessage />
