@@ -6,26 +6,21 @@ import {
   HttpTooManyRequests,
   isHttpException,
 } from "@httpx/exception";
-import { err, ok } from "@justmiracle/result";
 import z from "zod/v4";
 import { Result } from "better-result";
 import { headers } from "next/headers";
 import { rateLimit } from "@/lib/rate-limiting";
+import { validateTurnstile } from "@/lib/validate-turnstile";
 
 export async function POST(req: Request) {
   try {
-    // const body = await req.json().then(ok).catch(err);
-
-    // if (body.error) {
-    //   throw new HttpBadRequest(body.error);
-    // }
-
     const headersList = await headers();
     const getIp =
       headersList.get("cf-connecting-ip") ||
-      headersList.get("x-forwarded-for")?.split(",")[0];
+      headersList.get("x-forwarded-for")?.split(",")[0] ||
+      "unknown";
 
-    const rl = rateLimit(getIp!);
+    const rl = rateLimit(getIp);
 
     if (!rl) {
       throw new HttpTooManyRequests();
@@ -45,6 +40,14 @@ export async function POST(req: Request) {
 
     const { commune, name, birth, percentage, phoneNumber } =
       validatedInput.data;
+
+    const turnstileToken = parsed.value?.turnstileToken as string;
+
+    if (!turnstileToken) {
+      throw new HttpBadRequest("Missing captcha token");
+    }
+
+    await validateTurnstile(turnstileToken, getIp);
 
     const result = await templateService.create({
       commune,

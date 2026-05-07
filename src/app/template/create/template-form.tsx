@@ -40,8 +40,6 @@ import {
   DEFAULT_SCRIPT_ID,
   SCRIPT_URL,
   Turnstile,
-  TurnstileServerValidationErrorCode,
-  TurnstileServerValidationResponse,
 } from "@marsidev/react-turnstile";
 import Script from "next/script";
 export const CommuneLabels: Record<string, string> = {
@@ -60,6 +58,7 @@ export const CommuneLabels: Record<string, string> = {
 export default function CreateTemplate() {
   const navigate = useRouter();
   const queryClient = getQueryClient();
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const createTemplate = async (values: NewTemplate) => {
     const response = await apiFetch<ApiResponse<Template>>("/api/template", {
@@ -67,7 +66,7 @@ export default function CreateTemplate() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(values),
+      body: JSON.stringify({ ...values, turnstileToken }),
     });
 
     if (response.error || !response.value) {
@@ -115,33 +114,14 @@ export default function CreateTemplate() {
   const { mutate } = createTemplateMutate;
 
   const onsubmit = useCallback(
-    async (values: NewTemplate, event?: React.BaseSyntheticEvent) => {
-      const formData = new FormData(event?.target as HTMLFormElement);
-      const token = formData.get("cf-turnstile-response");
-
-      if (!token) {
+    (values: NewTemplate) => {
+      if (!turnstileToken) {
         toast.error("Please complete the captcha");
         return;
       }
-
-      const verifyRes = await apiFetch<
-        ApiResponse<TurnstileServerValidationResponse>
-      >("/api/verify", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ token }),
-      });
-
-      if (verifyRes.error) {
-        toast.error("Captcha verification failed. Please try again.");
-        return;
-      }
-
       mutate(values);
     },
-    [mutate],
+    [mutate, turnstileToken],
   );
 
   return (
@@ -254,6 +234,7 @@ export default function CreateTemplate() {
             <Turnstile
               injectScript={false}
               siteKey="0x4AAAAAADKBBRyxwepo61CM"
+              onSuccess={setTurnstileToken}
             />
 
             <Button
