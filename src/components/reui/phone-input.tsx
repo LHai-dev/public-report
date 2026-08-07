@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   ComponentProps,
@@ -6,12 +6,12 @@ import {
   useContext,
   useMemo,
   useState,
-} from "react"
-import * as BasePhoneInput from "react-phone-number-input"
-import flags from "react-phone-number-input/flags"
+} from "react";
+import * as BasePhoneInput from "react-phone-number-input";
+import flags from "react-phone-number-input/flags";
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
   Combobox,
   ComboboxContent,
@@ -22,22 +22,22 @@ import {
   ComboboxSeparator,
   ComboboxTrigger,
   ComboboxValue,
-} from "@/components/ui/combobox"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { GlobeIcon } from "lucide-react"
+} from "@/components/ui/combobox";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { GlobeIcon } from "lucide-react";
 
-type PhoneInputSize = "sm" | "default" | "lg"
+type PhoneInputSize = "sm" | "default" | "lg";
 
 const PhoneInputContext = createContext<{
-  variant: PhoneInputSize
-  popupClassName?: string
-  scrollAreaClassName?: string
+  variant: PhoneInputSize;
+  popupClassName?: string;
+  scrollAreaClassName?: string;
 }>({
   variant: "default",
   popupClassName: undefined,
   scrollAreaClassName: undefined,
-})
+});
 
 type PhoneInputProps = Omit<
   ComponentProps<"input">,
@@ -47,11 +47,11 @@ type PhoneInputProps = Omit<
     BasePhoneInput.Props<typeof BasePhoneInput.default>,
     "onChange" | "variant" | "popupClassName" | "scrollAreaClassName"
   > & {
-    onChange?: (value: BasePhoneInput.Value) => void
-    variant?: PhoneInputSize
-    popupClassName?: string
-    scrollAreaClassName?: string
-  }
+    onChange?: (value: BasePhoneInput.Value) => void;
+    variant?: PhoneInputSize;
+    popupClassName?: string;
+    scrollAreaClassName?: string;
+  };
 
 function PhoneInput({
   className,
@@ -62,7 +62,7 @@ function PhoneInput({
   value,
   ...props
 }: PhoneInputProps) {
-  const phoneInputSize = variant || "default"
+  const phoneInputSize = variant || "default";
   return (
     <PhoneInputContext.Provider
       value={{ variant: phoneInputSize, popupClassName, scrollAreaClassName }}
@@ -72,7 +72,7 @@ function PhoneInput({
           "flex",
           props["aria-invalid"] &&
             "[&_*[data-slot=combobox-trigger]]:border-destructive [&_*[data-slot=combobox-trigger]]:ring-destructive/50",
-          className
+          className,
         )}
         flagComponent={FlagComponent}
         countrySelectComponent={CountrySelect}
@@ -83,35 +83,36 @@ function PhoneInput({
         {...props}
       />
     </PhoneInputContext.Provider>
-  )
+  );
 }
 
 function InputComponent({ className, ...props }: ComponentProps<typeof Input>) {
-  const { variant } = useContext(PhoneInputContext)
+  const { variant } = useContext(PhoneInputContext);
 
   return (
     <Input
       className={cn(
         "rounded-s-none focus:z-1",
-        variant === "sm" &&
-          "h-7",
-        variant === "lg" &&
-          "h-9",
-        className
+        variant === "sm" && "h-7",
+        variant === "lg" && "h-9",
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
-type CountryEntry = { label: string; value: BasePhoneInput.Country | undefined }
+type CountryEntry = {
+  label: string;
+  value: BasePhoneInput.Country | undefined;
+};
 
 type CountrySelectProps = {
-  disabled?: boolean
-  value: BasePhoneInput.Country
-  options: CountryEntry[]
-  onChange: (country: BasePhoneInput.Country) => void
-}
+  disabled?: boolean;
+  value: BasePhoneInput.Country;
+  options: CountryEntry[];
+  onChange: (country: BasePhoneInput.Country) => void;
+};
 
 function CountrySelect({
   disabled,
@@ -119,15 +120,15 @@ function CountrySelect({
   options: countryList,
   onChange,
 }: CountrySelectProps) {
-  const { variant, popupClassName } = useContext(PhoneInputContext)
-  const [searchValue, setSearchValue] = useState("")
+  const { variant, popupClassName } = useContext(PhoneInputContext);
+  const [searchValue, setSearchValue] = useState("");
 
   const filteredCountries = useMemo(() => {
-    if (!searchValue) return countryList
+    if (!searchValue) return countryList;
     return countryList.filter(({ label }) =>
-      label.toLowerCase().includes(searchValue.toLowerCase())
-    )
-  }, [countryList, searchValue])
+      label.toLowerCase().includes(searchValue.toLowerCase()),
+    );
+  }, [countryList, searchValue]);
 
   return (
     <Combobox
@@ -135,7 +136,7 @@ function CountrySelect({
       value={selectedCountry || ""}
       onValueChange={(country: BasePhoneInput.Country | null) => {
         if (country) {
-          onChange(country)
+          onChange(country);
         }
       }}
     >
@@ -146,7 +147,7 @@ function CountrySelect({
             size={variant}
             className={cn(
               "rounded-s-lg rounded-e-none flex gap-1 border-e-0 px-2.5 py-0 leading-none hover:bg-transparent focus:z-10 data-pressed:bg-transparent",
-              disabled && "opacity-50"
+              disabled && "opacity-50",
             )}
             disabled={disabled}
           >
@@ -163,7 +164,7 @@ function CountrySelect({
       <ComboboxContent
         className={cn(
           "w-xs *:data-[slot=input-group]:bg-transparent",
-          popupClassName
+          popupClassName,
         )}
       >
         <ComboboxInput
@@ -197,7 +198,7 @@ function CountrySelect({
                         {`+${BasePhoneInput.getCountryCallingCode(item.value)}`}
                       </span>
                     </ComboboxItem>
-                  ) : null
+                  ) : null,
                 )}
               </ScrollArea>
             </div>
@@ -205,11 +206,11 @@ function CountrySelect({
         </ComboboxList>
       </ComboboxContent>
     </Combobox>
-  )
+  );
 }
 
 function FlagComponent({ country, countryName }: BasePhoneInput.FlagProps) {
-  const Flag = flags[country]
+  const Flag = flags[country];
 
   return (
     <span className="flex h-4 w-4 items-center justify-center [&_svg:not([class*='size-'])]:size-full! [&_svg:not([class*='size-'])]:rounded-[5px]">
@@ -219,7 +220,7 @@ function FlagComponent({ country, countryName }: BasePhoneInput.FlagProps) {
         <GlobeIcon className="size-4 opacity-60" />
       )}
     </span>
-  )
+  );
 }
 
-export { PhoneInput }
+export { PhoneInput };
