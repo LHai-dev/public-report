@@ -2,14 +2,14 @@ import { Login } from "@/db/schema";
 import { validateTurnstile } from "@/lib/validate-turnstile";
 import { userService } from "./user/user.service";
 import { HttpBadRequest, HttpForbidden, HttpNotFound } from "@httpx/exception";
-import { verify } from "@node-rs/argon2";
+import { hash, verify } from "@node-rs/argon2";
 import { sessionService } from "./session/session.service";
 
 class AuthService {
   async authenticationUserLogin(data: Login & { remoteIp: string }) {
     const { email, password, token, remoteIp } = data;
 
-    const turnstile = await validateTurnstile(token, remoteIp);
+    await validateTurnstile(token, remoteIp);
 
     const existingUser = await userService.findByEmail(email);
 
@@ -29,7 +29,19 @@ class AuthService {
 
     const sessionToken = await sessionService.generateSessionToken();
     const session = await sessionService.create(sessionToken, existingUser.id);
-    await sessionService.setSessionTokenCookies(token, session.expiresAt);
+    await sessionService.setSessionTokenCookies(
+      sessionToken,
+      session.expiresAt,
+    );
+  }
+
+  async hashPassword(password: string): Promise<string> {
+    return await hash(password, {
+      memoryCost: 19456,
+      timeCost: 2,
+      outputLen: 32,
+      parallelism: 1,
+    });
   }
 }
 
